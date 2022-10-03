@@ -1,1 +1,4 @@
+alembic~=1.8
 fastapi[all]~=0.85
+psycopg2-binary~=2.9
+SQLAlchemy~=1.4
