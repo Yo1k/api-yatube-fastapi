@@ -19,3 +19,11 @@ event.listen(
         Base.metadata,
         "before_create",
         DDL(f"CREATE SCHEMA IF NOT EXISTS {BASE_SCHEMA_NAME}"))
+
+
+def get_db():
+    db = SessionLocal()
+    try:
+        yield db
+    finally:
+        db.close()
