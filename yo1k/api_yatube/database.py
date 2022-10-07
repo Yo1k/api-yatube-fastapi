@@ -1,11 +1,13 @@
 from sqlalchemy import create_engine, MetaData, event, DDL
 from sqlalchemy.orm import sessionmaker, declarative_base
+from .settings import settings
 
-SQLALCHEMY_DATABASE_URL = "postgresql://postgres:postgres@localhost:5432"
-BASE_SCHEMA_NAME = "yatube"
+
+BASE_SCHEMA_NAME = settings.base_schema_name
+
 
 engine = create_engine(
-        url=SQLALCHEMY_DATABASE_URL,
+        url=settings.sqlalchemy_database_url,
         echo=True,
         future=True
 )

@@ -5,8 +5,8 @@ from sqlalchemy import pool
 
 from alembic import context
 
-from yo1k.api_yatube.database import BASE_SCHEMA_NAME, SQLALCHEMY_DATABASE_URL
 from yo1k.api_yatube.models import Base
+from yo1k.api_yatube.settings import settings
 
 # this is the Alembic Config object, which provides
 # access to the values within the .ini file in use.
@@ -31,7 +31,7 @@ target_metadata = Base.metadata
 
 def include_name(name, type_, parent_names):
     if type_ == "schema":
-        return name in [BASE_SCHEMA_NAME]
+        return name in [settings.base_schema_name]
     else:
         return True
 
@@ -48,7 +48,7 @@ def run_migrations_offline() -> None:
     script output.
 
     """
-    url = SQLALCHEMY_DATABASE_URL
+    url = settings.sqlalchemy_database_url
     context.configure(
         url=url,
         target_metadata=target_metadata,
@@ -71,7 +71,7 @@ def run_migrations_online() -> None:
 
     """
     configuration = config.get_section(config.config_ini_section)
-    configuration["sqlalchemy.url"] = SQLALCHEMY_DATABASE_URL
+    configuration["sqlalchemy.url"] = settings.sqlalchemy_database_url
     connectable = engine_from_config(
         configuration,
         prefix="sqlalchemy.",
