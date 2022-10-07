@@ -1,4 +1,7 @@
 alembic~=1.8
 fastapi[all]~=0.85
+passlib[bcrypt]
 psycopg2-binary~=2.9
+python-dotenv~=0.21
+python-jose[cryptography]
 SQLAlchemy~=1.4
