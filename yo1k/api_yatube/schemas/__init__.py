@@ -4,6 +4,9 @@ from .post import (
     PostPatch,
     PostUpdate,
 )
+from .token import (
+    Token,
+)
 from .user import (
     User,
     UserCreate,
