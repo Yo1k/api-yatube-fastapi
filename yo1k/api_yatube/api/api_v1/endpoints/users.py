@@ -1,6 +1,7 @@
 from fastapi import APIRouter, Depends
 from yo1k.api_yatube import schemas
 from yo1k.api_yatube.services.users import UsersService
+from yo1k.api_yatube.services.auth import AuthService, get_current_user
 from yo1k.api_yatube import models
 
 router = APIRouter(
@@ -26,74 +27,78 @@ def get_users(
 
 
 @router.get(
-        "/{user_id}",
+        "/me",
         response_model=schemas.User
 )
 def get_user(
-        user_id: int,
+        current_user: schemas.User = Depends(get_current_user),
         users_service: UsersService = Depends()
 ):
     return users_service.get(
             model_type=models.User,
-            obj_id=user_id
+            obj_id=current_user.id
     )
 
 
 @router.post(
         "/",
-        response_model=schemas.User
+        response_model=schemas.Token
 )
 def create_user(
         user: schemas.UserCreate,
         users_service: UsersService = Depends()
 ):
-    return users_service.create(
+    db_user = users_service.create(
             model_type=models.User,
             obj_in=user
     )
 
+    return AuthService.create_access_token(
+            user=db_user
+    )
+
 
 @router.put(
-        "/{user_id}",
+        "/me",
         response_model=schemas.User
 )
 def update_user(
-        user_id: int,
         user: schemas.UserUpdate,
+        current_user: schemas.User = Depends(get_current_user),
         users_service: UsersService = Depends()
 ):
     return users_service.update(
             model_type=models.User,
             obj_in=user,
-            obj_id=user_id
+            obj_id=current_user.id
     )
 
 
 @router.patch(
-        "/{user_id}",
+        "/me",
         response_model=schemas.User
 )
 def partial_update_user(
-        user_id: int,
         user: schemas.UserPatch,
+        current_user: schemas.User = Depends(get_current_user),
         users_service: UsersService = Depends()
 ):
     return users_service.partial_update(
             model_type=models.User,
             obj_in=user,
-            obj_id=user_id
+            obj_id=current_user.id
     )
 
 
 @router.delete(
-        "/{user_id}",
+        "/me",
         response_model=schemas.User
 )
 def delete_user(
-        user_id: int,
+        current_user: schemas.User = Depends(get_current_user),
         users_service: UsersService = Depends()
 ):
     return users_service.delete(
             model_type=models.User,
-            obj_id=user_id
+            obj_id=current_user.id
     )

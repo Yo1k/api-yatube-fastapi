@@ -14,7 +14,7 @@ from ..database import get_db
 from ..settings import settings
 
 
-oauth2_scheme = OAuth2PasswordBearer(tokenUrl="auth/sign-up")
+oauth2_scheme = OAuth2PasswordBearer(tokenUrl="auth/sign-in")
 
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
@@ -24,13 +24,12 @@ def get_current_user(token: str = Depends(oauth2_scheme)) -> schemas.User:
 
 
 class AuthService:
-    @classmethod
-    def get_password_hash(cls, password: str) -> str:
+    @staticmethod
+    def get_password_hash(password: str) -> str:
         return pwd_context.hash(password)
 
-    @classmethod
+    @staticmethod
     def create_access_token(
-            cls,
             user: models.User,
             expires_delta: Optional[timedelta] = None,
     ) -> schemas.Token:
@@ -54,15 +53,14 @@ class AuthService:
         )
         return schemas.Token(access_token=token)
 
-    @classmethod
+    @staticmethod
     def verify_password(
-            cls,
             plain_password: str,
             hashed_password: str) -> bool:
         return pwd_context.verify(plain_password, hashed_password)
 
-    @classmethod
-    def verify_token(cls, token: str) -> schemas.User:
+    @staticmethod
+    def verify_token(token: str) -> schemas.User:
         exception = HTTPException(
                 status_code=status.HTTP_401_UNAUTHORIZED,
                 detail="Could not validate credentials",
@@ -116,17 +114,17 @@ class AuthService:
 
         return self.create_access_token(user)
 
-    def register_new_user(
-            self,
-            user_in: schemas.UserCreate,
-    ) -> schemas.Token:
-        user_data = user_in.dict()
-        password = user_data.pop("password")
-        user = models.User(
-                hashed_password=self.get_password_hash(password),
-                **user_data
-        )
-        self.session.add(user)
-        self.session.commit()
-        self.session.refresh(user)
-        return self.create_access_token(user)
+    # def register_new_user(
+    #         self,
+    #         user_in: schemas.UserCreate,
+    # ) -> schemas.Token:
+    #     user_data = user_in.dict()
+    #     password = user_data.pop("password")
+    #     user = models.User(
+    #             hashed_password=self.get_password_hash(password),
+    #             **user_data
+    #     )
+    #     self.session.add(user)
+    #     self.session.commit()
+    #     self.session.refresh(user)
+    #     return self.create_access_token(user)
