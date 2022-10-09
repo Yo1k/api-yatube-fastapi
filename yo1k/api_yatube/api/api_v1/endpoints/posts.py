@@ -2,7 +2,7 @@ from fastapi import APIRouter, Depends
 from yo1k.api_yatube import schemas
 from yo1k.api_yatube.services.posts import PostsService
 from yo1k.api_yatube import models
-
+from yo1k.api_yatube.services.auth import get_current_user
 
 router = APIRouter(
         prefix="/posts",
@@ -46,11 +46,13 @@ def get_post(
 )
 def create_post(
         post: schemas.PostCreate,
+        current_user: schemas.User = Depends(get_current_user),
         posts_service: PostsService = Depends()
 ):
-    return posts_service.create(
+    return posts_service.create_with_owner(
             model_type=models.Post,
-            obj_in=post
+            obj_in=post,
+            owner_id=current_user.id
     )
 
 
@@ -59,10 +61,16 @@ def create_post(
         response_model=schemas.Post
 )
 def update_post(
-        post_id: int,
         post: schemas.PostUpdate,
+        post_id: int,
+        current_user: schemas.User = Depends(get_current_user),
         posts_service: PostsService = Depends()
 ):
+    posts_service.verify_authorization(
+            model_type=models.Post,
+            obj_id=post_id,
+            owner_id=current_user.id
+    )
     return posts_service.update(
             model_type=models.Post,
             obj_in=post,
@@ -77,8 +85,14 @@ def update_post(
 def partial_update_post(
         post: schemas.PostPatch,
         post_id: int,
+        current_user: schemas.User = Depends(get_current_user),
         posts_service: PostsService = Depends()
 ):
+    posts_service.verify_authorization(
+            model_type=models.Post,
+            obj_id=post_id,
+            owner_id=current_user.id
+    )
     return posts_service.partial_update(
             model_type=models.Post,
             obj_in=post,
@@ -92,8 +106,14 @@ def partial_update_post(
 )
 def delete_post(
         post_id: int,
+        current_user: schemas.User = Depends(get_current_user),
         posts_service: PostsService = Depends()
 ):
+    posts_service.verify_authorization(
+            model_type=models.Post,
+            obj_id=post_id,
+            owner_id=current_user.id
+    )
     return posts_service.delete(
             model_type=models.Post,
             obj_id=post_id

@@ -76,6 +76,14 @@ class DefaultService(Generic[ModelType, CreateSchemaType, UpdateSchemaType]):
         self.session.commit()
         return db_obj
 
+    def verify_authorization(
+            self,
+            model_type,
+            obj_id: int,
+            owner_id: int
+    ) -> None:
+        raise NotImplementedError
+
     def _get(
             self,
             model_type: Type[ModelType],
