@@ -2,7 +2,7 @@ from typing import Optional
 
 from pydantic import BaseModel
 
-from .post import Post
+from .post import PostID
 
 
 class UserBase(BaseModel):
@@ -14,7 +14,7 @@ class UserBase(BaseModel):
 
 class User(UserBase):
     id: int
-    posts: list[Post] = []
+    posts: list[PostID] = []
 
     class Config:
         orm_mode = True

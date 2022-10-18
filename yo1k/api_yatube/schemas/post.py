@@ -28,3 +28,10 @@ class PostUpdate(PostCreate):
 class PostPatch(PostUpdate):
     author_id: Optional[int] = None
     text: Optional[str] = None
+
+
+class PostID(BaseModel):
+    id: int
+
+    class Config:
+        orm_mode = True

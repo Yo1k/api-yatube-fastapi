@@ -14,11 +14,11 @@ router = APIRouter(
         "/sign-in",
         response_model=schemas.Token
 )
-def sign_in(
+async def sign_in(
         form_data: OAuth2PasswordRequestForm = Depends(),
         auth_service: AuthService = Depends()
 ):
-    return auth_service.authenticate_user(
+    return await auth_service.authenticate_user(
             username=form_data.username,
             password=form_data.password
     )

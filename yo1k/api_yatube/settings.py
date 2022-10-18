@@ -15,6 +15,7 @@ class Settings(BaseSettings):
     postgres_password: str
     postgres_db: str
     sqlalchemy_database_url: Optional[PostgresDsn] = None
+    async_sqlalchemy_database_url: str
 
     @validator("sqlalchemy_database_url", pre=True)
     def assemble_db_connection(

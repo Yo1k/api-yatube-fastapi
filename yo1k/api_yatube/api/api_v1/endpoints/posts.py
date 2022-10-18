@@ -14,12 +14,12 @@ router = APIRouter(
         "/",
         response_model=list[schemas.Post]
 )
-def get_posts(
+async def get_posts(
         skip: int = 0,
         limit: int = 10,
         posts_service: PostsService = Depends()
 ):
-    return posts_service.get_many(
+    return await posts_service.get_many(
             model_type=models.Post,
             skip=skip,
             limit=limit
@@ -30,11 +30,11 @@ def get_posts(
         "/{post_id}",
         response_model=schemas.Post
 )
-def get_post(
+async def get_post(
         post_id: int,
         posts_service: PostsService = Depends()
 ):
-    return posts_service.get(
+    return await posts_service.get(
             model_type=models.Post,
             obj_id=post_id
     )
@@ -44,12 +44,12 @@ def get_post(
         "/",
         response_model=schemas.Post
 )
-def create_post(
+async def create_post(
         post: schemas.PostCreate,
         current_user: schemas.User = Depends(get_current_user),
         posts_service: PostsService = Depends()
 ):
-    return posts_service.create_with_owner(
+    return await posts_service.create_with_owner(
             model_type=models.Post,
             obj_in=post,
             owner_id=current_user.id
@@ -60,18 +60,18 @@ def create_post(
         "/{post_id}",
         response_model=schemas.Post
 )
-def update_post(
+async def update_post(
         post: schemas.PostUpdate,
         post_id: int,
         current_user: schemas.User = Depends(get_current_user),
         posts_service: PostsService = Depends()
 ):
-    posts_service.verify_authorization(
+    await posts_service.verify_authorization(
             model_type=models.Post,
             obj_id=post_id,
             owner_id=current_user.id
     )
-    return posts_service.update(
+    return await posts_service.update(
             model_type=models.Post,
             obj_in=post,
             obj_id=post_id
@@ -82,18 +82,18 @@ def update_post(
         "/{post_id}",
         response_model=schemas.Post
 )
-def partial_update_post(
+async def partial_update_post(
         post: schemas.PostPatch,
         post_id: int,
         current_user: schemas.User = Depends(get_current_user),
         posts_service: PostsService = Depends()
 ):
-    posts_service.verify_authorization(
+    await posts_service.verify_authorization(
             model_type=models.Post,
             obj_id=post_id,
             owner_id=current_user.id
     )
-    return posts_service.partial_update(
+    return await posts_service.partial_update(
             model_type=models.Post,
             obj_in=post,
             obj_id=post_id
@@ -104,17 +104,17 @@ def partial_update_post(
         "/{post_id}",
         response_model=schemas.Post
 )
-def delete_post(
+async def delete_post(
         post_id: int,
         current_user: schemas.User = Depends(get_current_user),
         posts_service: PostsService = Depends()
 ):
-    posts_service.verify_authorization(
+    await posts_service.verify_authorization(
             model_type=models.Post,
             obj_id=post_id,
             owner_id=current_user.id
     )
-    return posts_service.delete(
+    return await posts_service.delete(
             model_type=models.Post,
             obj_id=post_id
     )

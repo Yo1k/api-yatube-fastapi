@@ -10,7 +10,7 @@ from .. import schemas
 class PostsService(
         DefaultService[models.Post, schemas.PostCreate, schemas.PostUpdate]
 ):
-    def create_with_owner(
+    async def create_with_owner(
             self,
             model_type: Type[models.Post],
             obj_in: schemas.PostCreate,
@@ -21,11 +21,11 @@ class PostsService(
                 **obj_in.dict()
         )
         self.session.add(db_obj)
-        self.session.commit()
-        self.session.refresh(db_obj)
+        await self.session.commit()
+        await self.session.refresh(db_obj)
         return db_obj
 
-    def verify_authorization(
+    async def verify_authorization(
             self,
             model_type,
             obj_id: int,
@@ -34,6 +34,6 @@ class PostsService(
         exception = HTTPException(
                 status_code=status.HTTP_403_FORBIDDEN,
         )
-        db_obj = self.get(model_type, obj_id)
+        db_obj = await self.get(model_type, obj_id)
         if db_obj.author_id != owner_id:
             raise exception

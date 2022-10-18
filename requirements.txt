@@ -1,4 +1,5 @@
 alembic~=1.8
+asyncpg~=0.26
 fastapi[all]~=0.85
 passlib[bcrypt]
 psycopg2-binary~=2.9

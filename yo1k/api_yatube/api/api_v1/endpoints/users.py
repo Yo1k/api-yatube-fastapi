@@ -14,12 +14,12 @@ router = APIRouter(
         "/",
         response_model=list[schemas.User]
 )
-def get_users(
+async def get_users(
         skip: int = 0,
         limit: int = 100,
         users_service: UsersService = Depends()
 ):
-    return users_service.get_many(
+    return await users_service.get_many(
             model_type=models.User,
             skip=skip,
             limit=limit
@@ -30,13 +30,27 @@ def get_users(
         "/me",
         response_model=schemas.User
 )
-def get_user(
+async def get_user(
         current_user: schemas.User = Depends(get_current_user),
         users_service: UsersService = Depends()
 ):
-    return users_service.get(
+    return await users_service.get(
             model_type=models.User,
             obj_id=current_user.id
+    )
+
+
+@router.get(
+        "/{user_id}",
+        response_model=schemas.User
+)
+async def get_user(
+        user_id: int,
+        users_service: UsersService = Depends()
+):
+    return await users_service.get(
+            model_type=models.User,
+            obj_id=user_id
     )
 
 
@@ -44,11 +58,11 @@ def get_user(
         "/",
         response_model=schemas.Token
 )
-def create_user(
+async def create_user(
         user: schemas.UserCreate,
         users_service: UsersService = Depends()
 ):
-    db_user = users_service.create(
+    db_user = await users_service.create(
             model_type=models.User,
             obj_in=user
     )
@@ -62,12 +76,12 @@ def create_user(
         "/me",
         response_model=schemas.User
 )
-def update_user(
+async def update_user(
         user: schemas.UserUpdate,
         current_user: schemas.User = Depends(get_current_user),
         users_service: UsersService = Depends()
 ):
-    return users_service.update(
+    return await users_service.update(
             model_type=models.User,
             obj_in=user,
             obj_id=current_user.id
@@ -78,12 +92,12 @@ def update_user(
         "/me",
         response_model=schemas.User
 )
-def partial_update_user(
+async def partial_update_user(
         user: schemas.UserPatch,
         current_user: schemas.User = Depends(get_current_user),
         users_service: UsersService = Depends()
 ):
-    return users_service.partial_update(
+    return await users_service.partial_update(
             model_type=models.User,
             obj_in=user,
             obj_id=current_user.id
@@ -94,11 +108,11 @@ def partial_update_user(
         "/me",
         response_model=schemas.User
 )
-def delete_user(
+async def delete_user(
         current_user: schemas.User = Depends(get_current_user),
         users_service: UsersService = Depends()
 ):
-    return users_service.delete(
+    return await users_service.delete(
             model_type=models.User,
             obj_id=current_user.id
     )

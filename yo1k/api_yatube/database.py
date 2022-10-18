@@ -1,4 +1,5 @@
 from sqlalchemy import create_engine, MetaData, event, DDL
+from sqlalchemy.ext.asyncio import create_async_engine, AsyncSession
 from sqlalchemy.orm import sessionmaker, declarative_base
 from .settings import settings
 
@@ -12,7 +13,21 @@ engine = create_engine(
         future=True
 )
 
+async_engine = create_async_engine(
+        url=settings.async_sqlalchemy_database_url,
+        echo=True,
+        future=True
+)
+
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
+
+AsyncSessionLocal = sessionmaker(
+        autocommit=False,
+        autoflush=False,
+        bind=async_engine,
+        class_=AsyncSession,
+        expire_on_commit=False
+)
 
 metadata_obj = MetaData(schema=BASE_SCHEMA_NAME)
 Base = declarative_base(metadata=metadata_obj)
@@ -29,3 +44,11 @@ def get_db():
         yield db
     finally:
         db.close()
+
+
+async def get_async_session() -> AsyncSession:
+    db = AsyncSessionLocal()
+    try:
+        yield db
+    finally:
+        await db.close()

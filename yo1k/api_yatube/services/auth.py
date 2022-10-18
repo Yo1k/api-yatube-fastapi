@@ -7,10 +7,11 @@ from fastapi.security import OAuth2PasswordBearer
 from jose import jwt, JWTError
 from passlib.context import CryptContext
 from pydantic import ValidationError
-from sqlalchemy.orm import Session
+from sqlalchemy.future import select
+from sqlalchemy.ext.asyncio import AsyncSession
 
 from .. import models, schemas
-from ..database import get_db
+from ..database import get_async_session
 from ..settings import settings
 
 
@@ -82,10 +83,10 @@ class AuthService:
 
         return user
 
-    def __init__(self, session: Session = Depends(get_db)):
-        self.session: Session = session
+    def __init__(self, session: AsyncSession = Depends(get_async_session)):
+        self.session: AsyncSession = session
 
-    def authenticate_user(
+    async def authenticate_user(
             self,
             username: str,
             password: str,
@@ -95,13 +96,11 @@ class AuthService:
                 detail="Incorrect username or password",
                 headers={"WWW-Authenticate": "Bearer"}
         )
-
-        user: models.User = (
-                self.session
-                .query(models.User)
+        result = await self.session.execute(
+                select(models.User)
                 .filter(models.User.username == username)
-                .first()
         )
+        user: models.User = result.scalars().first()
 
         if not user:
             raise exception
@@ -113,18 +112,3 @@ class AuthService:
             raise exception
 
         return self.create_access_token(user)
-
-    # def register_new_user(
-    #         self,
-    #         user_in: schemas.UserCreate,
-    # ) -> schemas.Token:
-    #     user_data = user_in.dict()
-    #     password = user_data.pop("password")
-    #     user = models.User(
-    #             hashed_password=self.get_password_hash(password),
-    #             **user_data
-    #     )
-    #     self.session.add(user)
-    #     self.session.commit()
-    #     self.session.refresh(user)
-    #     return self.create_access_token(user)
