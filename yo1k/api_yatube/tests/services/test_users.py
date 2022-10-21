@@ -2,6 +2,7 @@ import pytest
 
 from yo1k.api_yatube import schemas, models
 from yo1k.api_yatube.services.users import UsersService
+from yo1k.api_yatube.tests.conftest import DBTest
 
 
 @pytest.fixture()
@@ -11,6 +12,12 @@ def user_in():
             password="test_password"
     )
 
+@pytest.fixture()
+def user_in_2():
+    return schemas.UserCreate(
+            username="Tester2",
+            password="test_password"
+    )
 
 @pytest.fixture
 def users_service(db_session):
@@ -19,17 +26,27 @@ def users_service(db_session):
     )
 
 
-def test_get_many():
-    pass
-
-
 @pytest.mark.asyncio
 async def test_create_user(
-        db,
+        db: DBTest,
         user_in,
         users_service
 ):
-    await db.create_table()
+    user_db = await users_service.create(
+          model_type=models.User,
+          obj_in=user_in
+    )
+
+    assert user_db.username == user_in.username
+    assert user_db.id == 1
+    await db.delete_tables()
+
+
+@pytest.mark.asyncio
+async def test_create_user_2(
+        user_in,
+        users_service
+):
     user_db = await users_service.create(
           model_type=models.User,
           obj_in=user_in
@@ -38,4 +55,6 @@ async def test_create_user(
     assert user_db.username == user_in.username
     assert user_db.id == 1
 
-    await db.drop_table()
+
+if __name__ == "__main__":
+    pytest.main()
