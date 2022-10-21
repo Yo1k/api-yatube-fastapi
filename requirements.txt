@@ -1,8 +1,11 @@
 alembic~=1.8
+aiosqlite
+pytest-asyncio
 asyncpg~=0.26
 fastapi[all]~=0.85
 passlib[bcrypt]
 psycopg2-binary~=2.9
+pytest~=7.1
 python-dotenv~=0.21
 python-jose[cryptography]
 SQLAlchemy~=1.4

@@ -9,8 +9,14 @@ from sqlalchemy import (
 )
 from sqlalchemy.orm import relationship
 
-from yo1k.api_yatube.database import Base
+from sqlalchemy import MetaData
+from sqlalchemy.orm import declarative_base
 
+from yo1k.api_yatube.settings import settings
+
+Base = declarative_base(
+        metadata=MetaData(schema=settings.base_schema_name)
+)
 
 class User(Base):
     __tablename__ = "users"
