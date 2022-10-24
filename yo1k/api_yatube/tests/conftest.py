@@ -10,6 +10,7 @@ from sqlalchemy.orm import sessionmaker
 from yo1k.api_yatube.models import Base
 from yo1k.api_yatube.tests.utils import SQLiteDBTest
 
+
 if TYPE_CHECKING:
     TSession: TypeAlias = sessionmaker[AsyncSession]
 else:
@@ -49,7 +50,7 @@ async def db() -> SQLiteDBTest:
     await db.drop_tables()
 
 
-@pytest_asyncio.fixture
+@pytest_asyncio.fixture(scope="function", autouse=True)
 async def clear_tables(db):
     yield db
     await db.delete_tables()

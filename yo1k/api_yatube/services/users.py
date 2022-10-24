@@ -1,18 +1,33 @@
-from typing import Type, Union, Any
+from collections.abc import Callable
+from typing import Type, Union, Any, Optional
 
+from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
-from fastapi import HTTPException, status
+from fastapi import HTTPException, status, Depends
 from sqlalchemy.orm import joinedload
 
 from .crud import DefaultService
 from .. import models
 from .. import schemas
 from .auth import AuthService
+from ..database import get_async_session
 
 
 class UsersService(
         DefaultService[models.User, schemas.UserCreate, schemas.UserUpdate]
 ):
+    def __init__(
+            self,
+            session: AsyncSession = Depends(get_async_session),
+            hash_pass_func: Optional[Callable[[str], str]] = None
+
+    ):
+        super().__init__(session=session)
+        self.hash_pass_func = (
+                AuthService.get_password_hash if hash_pass_func is None
+                else hash_pass_func
+        )
+
     async def get_many(
             self,
             model_type: Type[models.User],
@@ -38,7 +53,7 @@ class UsersService(
         obj_data = obj_in.dict()
         password = obj_data.pop("password")
         db_obj = model_type(
-                hashed_password=AuthService.get_password_hash(password),
+                hashed_password=self._get_password_hash(password),
                 **obj_data
         )
         self.session.add(db_obj)
@@ -78,7 +93,7 @@ class UsersService(
         password = update_data.pop("password", None)
         if password:
             update_data["hashed_password"] = (
-                    AuthService.get_password_hash(password)
+                    self._get_password_hash(password)
             )
         return await super()._update(
                 model_type=model_type,
@@ -86,3 +101,6 @@ class UsersService(
                 obj_id=obj_id,
                 exclude_unset=exclude_unset
         )
+
+    def _get_password_hash(self, password: str) -> str:
+        return self.hash_pass_func(password)
