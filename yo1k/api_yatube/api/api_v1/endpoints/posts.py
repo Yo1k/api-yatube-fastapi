@@ -1,7 +1,6 @@
 from fastapi import APIRouter, Depends
 from yo1k.api_yatube import schemas
 from yo1k.api_yatube.services.posts import PostsService
-from yo1k.api_yatube import models
 from yo1k.api_yatube.services.auth import get_current_user
 
 router = APIRouter(
@@ -20,7 +19,6 @@ async def get_posts(
         posts_service: PostsService = Depends()
 ):
     return await posts_service.get_many(
-            model_type=models.Post,
             skip=skip,
             limit=limit
     )
@@ -35,7 +33,6 @@ async def get_post(
         posts_service: PostsService = Depends()
 ):
     return await posts_service.get(
-            model_type=models.Post,
             obj_id=post_id
     )
 
@@ -50,7 +47,6 @@ async def create_post(
         posts_service: PostsService = Depends()
 ):
     return await posts_service.create_with_owner(
-            model_type=models.Post,
             obj_in=post,
             owner_id=current_user.id
     )
@@ -67,12 +63,10 @@ async def update_post(
         posts_service: PostsService = Depends()
 ):
     await posts_service.verify_authorization(
-            model_type=models.Post,
             obj_id=post_id,
             owner_id=current_user.id
     )
     return await posts_service.update(
-            model_type=models.Post,
             obj_in=post,
             obj_id=post_id
     )
@@ -89,12 +83,10 @@ async def partial_update_post(
         posts_service: PostsService = Depends()
 ):
     await posts_service.verify_authorization(
-            model_type=models.Post,
             obj_id=post_id,
             owner_id=current_user.id
     )
     return await posts_service.partial_update(
-            model_type=models.Post,
             obj_in=post,
             obj_id=post_id
     )
@@ -110,11 +102,9 @@ async def delete_post(
         posts_service: PostsService = Depends()
 ):
     await posts_service.verify_authorization(
-            model_type=models.Post,
             obj_id=post_id,
             owner_id=current_user.id
     )
     return await posts_service.delete(
-            model_type=models.Post,
             obj_id=post_id
     )

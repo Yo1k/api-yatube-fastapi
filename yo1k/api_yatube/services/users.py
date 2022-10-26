@@ -6,7 +6,7 @@ from sqlalchemy.future import select
 from fastapi import HTTPException, status, Depends
 from sqlalchemy.orm import joinedload
 
-from .crud import DefaultService
+from .crud import CRUDService
 from .. import models
 from .. import schemas
 from .auth import AuthService
@@ -14,7 +14,7 @@ from ..database import get_async_session
 
 
 class UsersService(
-        DefaultService[models.User, schemas.UserCreate, schemas.UserUpdate]
+        CRUDService[models.User, schemas.UserCreate, schemas.UserUpdate]
 ):
     def __init__(
             self,
@@ -28,14 +28,17 @@ class UsersService(
                 else hash_pass_func
         )
 
+    @property
+    def model_type(self) -> Type[models.User]:
+        return models.User
+
     async def get_many(
             self,
-            model_type: Type[models.User],
             skip: int = 0,
             limit: int = 100,
     ) -> list[models.User]:
         result = await self.session.execute(
-                select(model_type)
+                select(self.model_type)
                 .offset(skip)
                 .limit(limit)
                 .options(
@@ -47,12 +50,11 @@ class UsersService(
 
     async def create(
             self,
-            model_type: Type[models.User],
             obj_in: schemas.UserCreate,
     ) -> models.User:
         obj_data = obj_in.dict()
         password = obj_data.pop("password")
-        db_obj = model_type(
+        db_obj = self.model_type(
                 hashed_password=self._get_password_hash(password),
                 **obj_data
         )
@@ -63,12 +65,11 @@ class UsersService(
 
     async def _get(
             self,
-            model_type: Type[models.User],
             obj_id: int,
     ) -> models.User:
         result = await self.session.execute(
-                select(model_type)
-                .filter(model_type.id == obj_id)
+                select(self.model_type)
+                .filter(self.model_type.id == obj_id)
                 .options(
                         joinedload(models.User.posts)
                         .load_only(models.Post.id)
@@ -81,7 +82,6 @@ class UsersService(
 
     async def _update(
             self,
-            model_type: Type[models.User],
             obj_in: Union[schemas.UserUpdate, dict[str, Any]],
             obj_id: int,
             exclude_unset: bool
@@ -96,7 +96,6 @@ class UsersService(
                     self._get_password_hash(password)
             )
         return await super()._update(
-                model_type=model_type,
                 obj_in=update_data,
                 obj_id=obj_id,
                 exclude_unset=exclude_unset

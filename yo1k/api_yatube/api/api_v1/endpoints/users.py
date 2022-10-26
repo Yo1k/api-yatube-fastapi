@@ -20,7 +20,6 @@ async def get_users(
         users_service: UsersService = Depends()
 ):
     return await users_service.get_many(
-            model_type=models.User,
             skip=skip,
             limit=limit
     )
@@ -35,7 +34,6 @@ async def get_user(
         users_service: UsersService = Depends()
 ):
     return await users_service.get(
-            model_type=models.User,
             obj_id=current_user.id
     )
 
@@ -49,7 +47,6 @@ async def get_user(
         users_service: UsersService = Depends()
 ):
     return await users_service.get(
-            model_type=models.User,
             obj_id=user_id
     )
 
@@ -63,7 +60,6 @@ async def create_user(
         users_service: UsersService = Depends()
 ):
     db_user = await users_service.create(
-            model_type=models.User,
             obj_in=user
     )
 
@@ -82,7 +78,6 @@ async def update_user(
         users_service: UsersService = Depends()
 ):
     return await users_service.update(
-            model_type=models.User,
             obj_in=user,
             obj_id=current_user.id
     )
@@ -98,7 +93,6 @@ async def partial_update_user(
         users_service: UsersService = Depends()
 ):
     return await users_service.partial_update(
-            model_type=models.User,
             obj_in=user,
             obj_id=current_user.id
     )
@@ -113,6 +107,5 @@ async def delete_user(
         users_service: UsersService = Depends()
 ):
     return await users_service.delete(
-            model_type=models.User,
             obj_id=current_user.id
     )

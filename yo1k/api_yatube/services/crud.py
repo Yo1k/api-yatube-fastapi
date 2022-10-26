@@ -1,3 +1,4 @@
+from abc import ABC, abstractmethod
 from typing import TypeVar, Type, Generic, Union, Any
 
 from fastapi import Depends, HTTPException, status
@@ -14,25 +15,29 @@ CreateSchemaType = TypeVar("CreateSchemaType", bound=BaseModel)
 UpdateSchemaType = TypeVar("UpdateSchemaType", bound=BaseModel)
 
 
-class DefaultService(Generic[ModelType, CreateSchemaType, UpdateSchemaType]):
+class CRUDService(ABC, Generic[ModelType, CreateSchemaType,
+                               UpdateSchemaType]):
     def __init__(self, session: AsyncSession = Depends(get_async_session)):
         self.session: AsyncSession = session
 
+    @property
+    @abstractmethod
+    def model_type(self) -> Type[ModelType]:
+        pass
+
     async def get(
             self,
-            model_type: Type[ModelType],
             obj_id: int,
     ) -> ModelType:
-        return await self._get(model_type, obj_id)
+        return await self._get(obj_id)
 
     async def get_many(
             self,
-            model_type: Type[ModelType],
             skip: int = 0,
             limit: int = 100,
     ) -> list[ModelType]:
         result = await self.session.execute(
-                select(model_type)
+                select(self.model_type)
                 .offset(skip)
                 .limit(limit)
         )
@@ -40,10 +45,9 @@ class DefaultService(Generic[ModelType, CreateSchemaType, UpdateSchemaType]):
 
     async def create(
             self,
-            model_type: Type[ModelType],
             obj_in: CreateSchemaType,
     ) -> ModelType:
-        db_obj = model_type(**obj_in.dict())
+        db_obj = self.model_type(**obj_in.dict())
         self.session.add(db_obj)
         await self.session.commit()
         await self.session.refresh(db_obj)
@@ -51,12 +55,10 @@ class DefaultService(Generic[ModelType, CreateSchemaType, UpdateSchemaType]):
 
     async def update(
             self,
-            model_type: Type[ModelType],
             obj_in: Union[UpdateSchemaType, dict[str, Any]],
             obj_id: int
     ) -> ModelType:
         return await self._update(
-                model_type,
                 obj_in,
                 obj_id,
                 exclude_unset=False
@@ -64,12 +66,10 @@ class DefaultService(Generic[ModelType, CreateSchemaType, UpdateSchemaType]):
 
     async def partial_update(
             self,
-            model_type: Type[ModelType],
             obj_in: Union[UpdateSchemaType, dict[str, Any]],
             obj_id: int
     ) -> ModelType:
         return await self._update(
-                model_type,
                 obj_in,
                 obj_id,
                 exclude_unset=True
@@ -77,10 +77,9 @@ class DefaultService(Generic[ModelType, CreateSchemaType, UpdateSchemaType]):
 
     async def delete(
             self,
-            model_type: Type[ModelType],
             obj_id: int
     ) -> ModelType:
-        db_obj = await self._get(model_type, obj_id)
+        db_obj = await self._get(obj_id)
         if not db_obj:
             raise HTTPException(status.HTTP_404_NOT_FOUND)
         await self.session.delete(db_obj)
@@ -89,7 +88,6 @@ class DefaultService(Generic[ModelType, CreateSchemaType, UpdateSchemaType]):
 
     async def verify_authorization(
             self,
-            model_type,
             obj_id: int,
             owner_id: int
     ) -> None:
@@ -97,12 +95,11 @@ class DefaultService(Generic[ModelType, CreateSchemaType, UpdateSchemaType]):
 
     async def _get(
             self,
-            model_type: Type[ModelType],
             obj_id: int,
     ) -> ModelType:
         result = await self.session.execute(
-                select(model_type)
-                .filter(model_type.id == obj_id)
+                select(self.model_type)
+                .filter(self.model_type.id == obj_id)
         )
         obj = result.scalars().first()
         if not obj:
@@ -111,12 +108,11 @@ class DefaultService(Generic[ModelType, CreateSchemaType, UpdateSchemaType]):
 
     async def _update(
             self,
-            model_type: Type[ModelType],
             obj_in: Union[UpdateSchemaType, dict[str, Any]],
             obj_id: int,
             exclude_unset: bool
     ) -> ModelType:
-        db_obj = await self._get(model_type, obj_id)
+        db_obj = await self._get(obj_id)
         obj_data = jsonable_encoder(db_obj)
         if isinstance(obj_in, dict):
             update_data = obj_in
